@@ -15,4 +15,3 @@ for word in words:
         fin_words.append(word + 'ing')
 
 print(' '.join(fin_words))
-
