@@ -5,10 +5,12 @@ results = [
     'результат: 2'
 ]
 
+
 def add_10(text):
     index = text.index(':')
     number = int(text[index + 1:])
     return number + 10
+
 
 for res in results:
     print(add_10(res))
