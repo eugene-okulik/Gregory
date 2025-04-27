@@ -11,6 +11,7 @@ def fibonacci():
         a = b
         b = a + b
 
+
 fib = fibonacci()
 
 count = 0
