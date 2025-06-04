@@ -27,6 +27,8 @@ book3.reserved = True
 for book in [book1, book2, book3, book4, book5]:
     print(book.get_info())
 
+
+
 class SchoolBook(Book):
     def __init__(self, title, author, pages, isbn, subject, grade, has_exercises, reserved=False):
         super().__init__(title, author, pages, isbn, reserved)
@@ -51,3 +53,4 @@ textbook2.reserved = True
 
 for textbook in [textbook1, textbook2, textbook3, textbook4, textbook5]:
     print(textbook.get_info())
+
