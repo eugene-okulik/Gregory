@@ -28,7 +28,6 @@ for book in [book1, book2, book3, book4, book5]:
     print(book.get_info())
 
 
-
 class SchoolBook(Book):
     def __init__(self, title, author, pages, isbn, subject, grade, has_exercises, reserved=False):
         super().__init__(title, author, pages, isbn, reserved)
@@ -37,7 +36,8 @@ class SchoolBook(Book):
         self.has_exercises = has_exercises
 
     def get_info(self):
-        info = f"Название: {self.title}, Автор: {self.author}, страниц: {self.pages}, предмет: {self.subject}, класс: {self.grade}"
+        info = (f"Название: {self.title}, Автор: {self.author}, "
+                f"страниц: {self.pages}, предмет: {self.subject}, класс: {self.grade}")
         if self.reserved:
             info += ", зарезервирована"
         return info
@@ -53,4 +53,3 @@ textbook2.reserved = True
 
 for textbook in [textbook1, textbook2, textbook3, textbook4, textbook5]:
     print(textbook.get_info())
-
