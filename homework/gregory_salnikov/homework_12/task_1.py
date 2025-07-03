@@ -8,7 +8,8 @@ class Flower:
         self.lifespan = lifespan
 
     def __str__(self):
-        return f"{self.color} {self.name} (свежесть: {self.freshness}/10, стебель: {self.stem_length}см, цена: {self.price}р, живет: {self.lifespan} дней)"
+        return (f"{self.color} {self.name} (свежесть: {self.freshness}/10, стебель: {self.stem_length}см, "
+                f"цена: {self.price}р, живет: {self.lifespan} дней)")
 
 
 class Rose(Flower):
@@ -58,7 +59,8 @@ class Bouquet:
 
     def __str__(self):
         return "\n".join(str(flower) for flower in
-                         self.flowers) + f"\nОбщая стоимость: {self.total_price()}р, среднее время увядания: {self.average_lifespan():.1f} дней"
+                         self.flowers) + (f"\nОбщая стоимость: {self.total_price()}р, "
+                                          f"среднее время увядания: {self.average_lifespan():.1f} дней")
 
 
 rose1 = Rose("красная", 9, 40, 150)
