@@ -29,4 +29,5 @@ def process_dates():
                 days_ago = (datetime.now() - date).days
                 print(f"3. {days_ago}")
 
+
 process_dates()
