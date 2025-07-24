@@ -1,0 +1,30 @@
+INSERT into students (name, second_name) VALUES ('Gregory', 'Salnikov')
+INSERT into books (title, taken_by_student_id) VALUES ('Firsct Book for Gregory', 20844)
+INSERT into books (title, taken_by_student_id) VALUES ('Second Book for Gregory', 20844)
+INSERT into `groups` (title, start_date) VALUES ('Group of Gregory', 'Март')
+UPDATE students SET group_id = 5458 WHERE id = 20844
+INSERT into subjets (title) VALUES ('SQUAT')
+INSERT into subjets (title) VALUES ('BENCH')
+INSERT into subjets (title) VALUES ('DEADLIFT')
+RENAME TABLE `st-onl`.subjets TO `st-onl`.subjects;
+INSERT into lessons (title, subject_id) VALUES ('SQUAT Lesson 1', 11578)
+INSERT into lessons (title, subject_id) VALUES ('SQUAT Lesson 2', 11578)
+INSERT into lessons (title, subject_id) VALUES ('BENCH Lesson 1', 11579)
+INSERT into lessons (title, subject_id) VALUES ('BENCH Lesson 2', 11579)
+INSERT into lessons (title, subject_id) VALUES ('DEADLIFT Lesson 1', 11580)
+INSERT into lessons (title, subject_id) VALUES ('DEADLIFT Lesson 2', 11580)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11606, 20844)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11607, 20844)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11608, 20844)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11609, 20844)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11610, 20844)
+INSERT into marks (value, lesson_id, student_id) VALUES ('five', 11611, 20844)
+SELECT * FROM marks WHERE student_id = '20844'
+SELECT * FROM books WHERE taken_by_student_id = '20844'
+SELECT * FROM `groups` g
+JOIN students st ON g.id = st.group_id
+JOIN books b ON st.id = b.taken_by_student_id
+JOIN marks m ON b.taken_by_student_id = m.student_id
+JOIN lessons l ON m.lesson_id = l.id
+JOIN subjects s ON l.subject_id = s.id
+WHERE st.id = '20844'
