@@ -5,24 +5,25 @@ from mysql.connector import Error
 def create_connection():
     """Создание подключения к базе данных"""
     try:
-        db = mysql.connector.connect(
+        connection = mysql.connector.connect(
             user='st-onl',
             passwd='AVNS_tegPDkI5BlB2lW5eASC',
             host='db-mysql-fra1-09136-do-user-7651996-0.b.db.ondigitalocean.com',
             port=25060,
             database='st-onl'
         )
-        print("Успешное подключение к базе данных")
-        return db
+        if connection.is_connected():
+            print("Успешное подключение к базе данных")
+            return connection
     except Error as e:
         print(f"Ошибка подключения: {e}")
         return None
 
 
-def execute_query(db, query, params=None, fetch=False):
+def execute_query(connection, query, params=None, fetch=False):
     """Выполнение SQL запроса"""
-    cursor = db.cursor()
     try:
+        cursor = connection.cursor()
         if params:
             cursor.execute(query, params)
         else:
@@ -30,146 +31,120 @@ def execute_query(db, query, params=None, fetch=False):
 
         if fetch:
             result = cursor.fetchall()
-            return result, cursor.lastrowid
+            cursor.close()
+            return result
         else:
-            db.commit()
-            return None, cursor.lastrowid
+            connection.commit()
+            last_id = cursor.lastrowid
+            cursor.close()
+            return last_id
     except Error as e:
         print(f"Ошибка выполнения запроса: {e}")
-        db.rollback()
-        return None, None
-    finally:
-        cursor.close()
+        return None
 
 
 def main():
-    db = create_connection()
-    if not db:
+    # Подключаемся к базе данных
+    connection = create_connection()
+    if not connection:
         return
 
     try:
-        print("\n1. Добавление студента...")
+        # 1. Добавляем студента
+        print("\n1. Добавляем студента...")
         student_query = "INSERT INTO students (name, second_name) VALUES (%s, %s)"
-        student_params = ('Gregory', 'Salnikov')
-        _, student_id = execute_query(db, student_query, student_params)
+        student_id = execute_query(connection, student_query, ('Gregory', 'Salnikov'))
         print(f"Добавлен студент с ID: {student_id}")
 
-        print("\n2. Добавление книг для студента...")
-        books = [
-            ('First Book for Gregory', student_id),
-            ('Second Book for Gregory', student_id)
-        ]
+        # 2. Добавляем книги для студента
+        print("\n2. Добавляем книги...")
+        book1_query = "INSERT INTO books (title, taken_by_student_id) VALUES (%s, %s)"
+        book1_id = execute_query(connection, book1_query, ('First Book for Gregory', student_id))
+        book2_id = execute_query(connection, book1_query, ('Second Book for Gregory', student_id))
+        print(f"Добавлены книги с ID: {book1_id}, {book2_id}")
 
-        book_ids = []
-        for book_title, taken_by in books:
-            book_query = "INSERT INTO books (title, taken_by_student_id) VALUES (%s, %s)"
-            book_params = (book_title, taken_by)
-            _, book_id = execute_query(db, book_query, book_params)
-            book_ids.append(book_id)
-            print(f"Добавлена книга '{book_title}' с ID: {book_id}")
-
-        print("\n3. Добавление группы...")
+        # 3. Добавляем группу
+        print("\n3. Добавляем группу...")
         group_query = "INSERT INTO `groups` (title, start_date) VALUES (%s, %s)"
-        group_params = ('Group of Gregory', 'Март')
-        _, group_id = execute_query(db, group_query, group_params)
+        group_id = execute_query(connection, group_query, ('Group of Gregory', 'Март'))
         print(f"Добавлена группа с ID: {group_id}")
 
-        print("\n4. Привязка студента к группе...")
+        # 4. Определяем студента в группу
+        print("\n4. Определяем студента в группу...")
         update_student_query = "UPDATE students SET group_id = %s WHERE id = %s"
-        update_student_params = (group_id, student_id)
-        execute_query(db, update_student_query, update_student_params)
-        print(f"Студент {student_id} привязан к группе {group_id}")
+        execute_query(connection, update_student_query, (group_id, student_id))
+        print("Студент добавлен в группу")
 
-        print("\n5. Добавление предметов...")
+        # 5. Добавляем предметы
+        print("\n5. Добавляем предметы...")
         subjects = ['SQUAT', 'BENCH', 'DEADLIFT']
-        subject_ids = {}
+        subject_ids = []
 
         for subject in subjects:
             subject_query = "INSERT INTO subjects (title) VALUES (%s)"
-            subject_params = (subject,)
-            _, subject_id = execute_query(db, subject_query, subject_params)
-            subject_ids[subject] = subject_id
+            subject_id = execute_query(connection, subject_query, (subject,))
+            subject_ids.append(subject_id)
             print(f"Добавлен предмет '{subject}' с ID: {subject_id}")
 
-        print("\n6. Добавление уроков...")
-        lessons_data = [
-            ('SQUAT Lesson 1', subject_ids['SQUAT']),
-            ('SQUAT Lesson 2', subject_ids['SQUAT']),
-            ('BENCH Lesson 1', subject_ids['BENCH']),
-            ('BENCH Lesson 2', subject_ids['BENCH']),
-            ('DEADLIFT Lesson 1', subject_ids['DEADLIFT']),
-            ('DEADLIFT Lesson 2', subject_ids['DEADLIFT'])
-        ]
-
+        # 6. Добавляем уроки для каждого предмета
+        print("\n6. Добавляем уроки...")
         lesson_ids = []
-        for lesson_title, subject_id in lessons_data:
-            lesson_query = "INSERT INTO lessons (title, subject_id) VALUES (%s, %s)"
-            lesson_params = (lesson_title, subject_id)
-            _, lesson_id = execute_query(db, lesson_query, lesson_params)
-            lesson_ids.append(lesson_id)
-            print(f"Добавлен урок '{lesson_title}' с ID: {lesson_id}")
 
-        print("\n7. Добавление оценок...")
+        for i, subject_id in enumerate(subject_ids):
+            lesson1_query = "INSERT INTO lessons (title, subject_id) VALUES (%s, %s)"
+            lesson2_query = "INSERT INTO lessons (title, subject_id) VALUES (%s, %s)"
+
+            lesson1_id = execute_query(connection, lesson1_query, (f'{subjects[i]} Lesson 1', subject_id))
+            lesson2_id = execute_query(connection, lesson2_query, (f'{subjects[i]} Lesson 2', subject_id))
+
+            lesson_ids.extend([lesson1_id, lesson2_id])
+            print(f"Добавлены уроки для предмета {subjects[i]}: {lesson1_id}, {lesson2_id}")
+
+        # 7. Добавляем оценки студенту за все уроки
+        print("\n7. Добавляем оценки...")
         for lesson_id in lesson_ids:
             mark_query = "INSERT INTO marks (value, lesson_id, student_id) VALUES (%s, %s, %s)"
-            mark_params = ('five', lesson_id, student_id)
-            execute_query(db, mark_query, mark_params)
-            print(f"Добавлена оценка 'five' за урок {lesson_id}")
+            execute_query(connection, mark_query, ('five', lesson_id, student_id))
+        print("Добавлены оценки за все уроки")
 
-        print("\n" + "=" * 50)
-        print("ВЫВОД ДАННЫХ СТУДЕНТА:")
-        print("=" * 50)
+        # 8. Получаем и выводим все данные студента
+        print("\n8. Получаем данные студента...")
 
-        print("\n8.1 Все оценки студента:")
+        # Оценки студента
         marks_query = "SELECT * FROM marks WHERE student_id = %s"
-        marks_params = (student_id,)
-        marks, _ = execute_query(db, marks_query, marks_params, fetch=True)
-
+        marks = execute_query(connection, marks_query, (student_id,), fetch=True)
+        print("\nОценки студента:")
         for mark in marks:
-            print(f"Оценка: {mark}")
+            print(mark)
 
-        print("\n8.2 Все книги студента:")
+        # Книги студента
         books_query = "SELECT * FROM books WHERE taken_by_student_id = %s"
-        books_params = (student_id,)
-        books, _ = execute_query(db, books_query, books_params, fetch=True)
-
+        books = execute_query(connection, books_query, (student_id,), fetch=True)
+        print("\nКниги студента:")
         for book in books:
-            print(f"Книга: {book}")
+            print(book)
 
-        print("\n8.3 Полная информация о студенте:")
+        # Полная информация о студенте
         full_info_query = """
-        SELECT 
-            st.id as student_id,
-            st.name as student_name,
-            st.second_name as student_second_name,
-            g.title as group_title,
-            b.title as book_title,
-            m.value as mark_value,
-            l.title as lesson_title,
-            s.title as subject_title
-        FROM `groups` g
+        SELECT * FROM `groups` g
         JOIN students st ON g.id = st.group_id
         JOIN books b ON st.id = b.taken_by_student_id
-        JOIN marks m ON st.id = m.student_id
+        JOIN marks m ON b.taken_by_student_id = m.student_id
         JOIN lessons l ON m.lesson_id = l.id
         JOIN subjects s ON l.subject_id = s.id
         WHERE st.id = %s
         """
-        full_info_params = (student_id,)
-        full_info, _ = execute_query(db, full_info_query, full_info_params, fetch=True)
-
-        print("\nПолная информация:")
-        for row in full_info:
-            print(f"Студент: {row[1]} {row[2]}, Группа: {row[3]}, "
-                  f"Книга: {row[4]}, Оценка: {row[5]}, "
-                  f"Урок: {row[6]}, Предмет: {row[7]}")
+        full_info = execute_query(connection, full_info_query, (student_id,), fetch=True)
+        print("\nПолная информация о студенте:")
+        for info in full_info:
+            print(info)
 
     except Error as e:
         print(f"Произошла ошибка: {e}")
     finally:
-        if db.is_connected():
-            db.close()
-            print("\nПодключение к базе данных закрыто")
+        if connection.is_connected():
+            connection.close()
+            print("\nСоединение с базой данных закрыто")
 
 
 if __name__ == "__main__":
